@@ -1,0 +1,423 @@
+// ─── Modal Overlay ────────────────────────────────────────────────────────────
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  z-index: 300;
+  animation: backdropIn 0.2s ease;
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.30), 0 4px 16px rgba(0, 0, 0, 0.12);
+  animation: modalIn 0.22s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.panelHeader {
+  padding: 18px 24px;
+  background: #faf9f8;
+  border-bottom: 1px solid #edebe9;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.35em;
+  font-weight: 800;
+  margin: 0;
+  color: #1a1a2e;
+  letter-spacing: -0.2px;
+}
+
+.titleIcon {
+  color: #0078d4;
+  font-size: 20px;
+}
+
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #edebe9;
+  background: #fff;
+  color: #605e5c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+
+  &:hover { background: #f3f2f1; color: #323130; border-color: #c8c6c4; }
+}
+
+// ─── Scrollable Form Body ─────────────────────────────────────────────────────
+.panelContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+}
+
+// ─── Form Sections ────────────────────────────────────────────────────────────
+.formSection {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #edebe9;
+
+  &:last-of-type { border-bottom: none; margin-bottom: 0; }
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0;
+    font-size: 1.05em;
+    font-weight: 700;
+    color: #323130;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.sectionIcon { color: #0078d4; font-size: 17px; }
+
+// ─── Banner Upload ────────────────────────────────────────────────────────────
+.bannerUpload {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bannerPreviewWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bannerPreview {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #edebe9;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.removeBtn {
+  align-self: flex-start;
+  background-color: #f3f2f1;
+  border: 1px solid #edebe9;
+
+  &:hover { background-color: #e1dfdd; border-color: #d2d0ce; }
+}
+
+.uploadArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  border: 2px dashed #c8c6c4;
+  border-radius: 10px;
+  background-color: #faf9f8;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover { border-color: #0078d4; background-color: #f0f6ff; }
+}
+
+.uploadIcon { font-size: 30px; color: #605e5c; margin-bottom: 8px; }
+
+.fileInput { display: none; }
+
+.uploadLabel {
+  color: #0078d4;
+  font-weight: 600;
+  font-size: 0.94em;
+  cursor: pointer;
+  margin-bottom: 4px;
+
+  &:hover { text-decoration: underline; }
+}
+
+.uploadHint { font-size: 0.78em; color: #8a8886; }
+
+// ─── Rich Text Wrapper ────────────────────────────────────────────────────────
+// Give the PnP RichText control a visible border and min-height so it looks
+// like a proper form field rather than an invisible box.
+.richTextWrapper {
+  border: 1px solid #c8c6c4;
+  border-radius: 4px;
+  min-height: 200px;
+  padding: 2px;
+  transition: border-color 0.15s ease;
+
+  &:focus-within {
+    border-color: #0078d4;
+    box-shadow: 0 0 0 1px #0078d4;
+  }
+
+  // Ensure toolbar doesn't overflow modal
+  :global(.ql-toolbar) {
+    border-bottom: 1px solid #edebe9;
+    border-radius: 4px 4px 0 0;
+    background: #faf9f8;
+    flex-wrap: wrap;
+  }
+
+  :global(.ql-container) {
+    min-height: 160px;
+    font-size: 0.94em;
+    font-family: inherit;
+    border-radius: 0 0 4px 4px;
+  }
+
+  :global(.ql-editor) {
+    min-height: 160px;
+    padding: 12px 14px;
+    line-height: 1.6;
+  }
+}
+
+// ─── Date Row ─────────────────────────────────────────────────────────────────
+.dateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.dateField { width: 100%; }
+
+// ─── Hints & Errors ───────────────────────────────────────────────────────────
+.fieldHint {
+  font-size: 0.82em;
+  color: #605e5c;
+  background-color: #f3f2f1;
+  border-left: 3px solid #0078d4;
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+  margin-top: -8px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  display: block;
+}
+
+.error {
+  color: #a4262c;
+  font-size: 12px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+
+  &::before { content: '⚠'; font-size: 13px; }
+}
+
+.errorBar {
+  margin-bottom: 16px;
+  border-radius: 6px;
+}
+
+// ─── Attachments ──────────────────────────────────────────────────────────────
+.attachmentCount {
+  margin-left: auto;
+  font-size: 0.78em;
+  font-weight: 600;
+  color: #605e5c;
+  background: #f3f2f1;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid #edebe9;
+}
+
+.attachmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  // No overflow:hidden here — intentional, keeps PeoplePicker dropdown free
+}
+
+.attachmentItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #edebe9;
+  border-radius: 6px;
+  gap: 8px;
+}
+
+.attachmentNew { border-color: #0078d4; background: #f0f6ff; }
+
+.attachmentInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.attachmentIcon { color: #0078d4; font-size: 18px; flex-shrink: 0; }
+
+.attachmentName {
+  font-size: 0.88em;
+  color: #323130;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.attachmentSize { font-size: 0.78em; color: #8a8886; flex-shrink: 0; }
+
+.attachmentActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.attachmentDownload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  color: #0078d4;
+  text-decoration: none;
+
+  &:hover { background: #f0f6ff; }
+}
+
+.attachmentRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a4262c;
+
+  &:hover { background: #fde7e9; }
+}
+
+.attachmentUploadArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border: 2px dashed #c8c6c4;
+  border-radius: 10px;
+  background-color: #faf9f8;
+  cursor: pointer;
+  gap: 6px;
+  font-size: 0.88em;
+  color: #605e5c;
+
+  &:hover { border-color: #0078d4; background-color: #f0f6ff; }
+}
+
+// ─── Action Buttons ───────────────────────────────────────────────────────────
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  padding: 18px 24px;
+  border-top: 1px solid #edebe9;
+  justify-content: flex-end;
+  align-items: center;
+  background: #faf9f8;
+  flex-shrink: 0;
+
+  :global(.ms-Spinner) { margin-left: 8px; }
+}
+
+// ─── Toggle ───────────────────────────────────────────────────────────────────
+.toggleField { margin-bottom: 4px; }
+
+.criticalWarning {
+  margin-top: 8px;
+  margin-bottom: 4px;
+  border-radius: 6px;
+}
+
+// ─── Fluent overrides ─────────────────────────────────────────────────────────
+:global {
+  .ms-ComboBox,
+  .ms-Dropdown,
+  .ms-TextField { margin-bottom: 16px; }
+  .ms-Label { font-weight: 600; color: #323130; font-size: 0.9em; margin-bottom: 6px; }
+  .ms-Dropdown-container,
+  .ms-TextField-fieldGroup { border-radius: 4px; }
+  .ms-MessageBar { margin-bottom: 16px; border-radius: 6px; }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .backdrop { padding: 0; align-items: flex-end; }
+  .modal { max-width: 100%; border-radius: 14px 14px 0 0; max-height: 92vh; }
+  .panelHeader { padding: 14px 16px; }
+  .panelContent { padding: 16px; }
+  .panelTitle { font-size: 1.15em; }
+  .dateRow { grid-template-columns: 1fr; }
+  .bannerPreview { height: 150px; }
+  .uploadArea { padding: 20px; }
+  .actionButtons { padding: 14px 16px; flex-direction: row; }
+}
+
+@media (max-width: 480px) {
+  .panelTitle { font-size: 1.1em; }
+  .sectionHeader h3 { font-size: 0.98em; }
+  .actionButtons {
+    flex-direction: column;
+    align-items: stretch;
+    button { width: 100%; }
+  }
+}

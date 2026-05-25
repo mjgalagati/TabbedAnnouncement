@@ -1,0 +1,447 @@
+// ─── Modal Overlay ────────────────────────────────────────────────────────────
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  z-index: 200;
+  animation: backdropIn 0.2s ease;
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+// ~80% wide, article feel
+.modal {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: min(80vw, 960px);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.32), 0 4px 20px rgba(0, 0, 0, 0.14);
+  animation: modalIn 0.22s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+// ─── Hero Banner (article style, tall) ───────────────────────────────────────
+.bannerContainer {
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+  flex-shrink: 0;
+}
+
+.bannerImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+// Title overlay on banner — article-hero style
+.bannerOverlayContent {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.30) 50%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 28px 32px;
+  gap: 8px;
+}
+
+.bannerTypeBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bannerTypeBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+  border-radius: 20px;
+  font-size: 0.72em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(4px);
+}
+
+.bannerTitle {
+  font-size: 2em;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.15;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.4px;
+}
+
+.bannerAuthor {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.80em;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.bannerPublishDate {
+  font-size: 0.76em;
+  color: rgba(255, 255, 255, 0.62);
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.expiredOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+
+  span {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 8px 22px;
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+  }
+}
+
+// ─── Close Button ─────────────────────────────────────────────────────────────
+.closeBtn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 10;
+  transition: background 0.15s ease;
+
+  &:hover { background: rgba(0, 0, 0, 0.68); }
+}
+
+.closeBtnNoImage {
+  background: rgba(0, 0, 0, 0.07);
+  color: #323130;
+
+  &:hover { background: rgba(0, 0, 0, 0.13); }
+}
+
+// ─── Scrollable Body ──────────────────────────────────────────────────────────
+.scrollBody {
+  flex: 1;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 3px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+}
+
+// ─── Article Content ──────────────────────────────────────────────────────────
+.content {
+  padding: 32px 36px;
+  max-width: 760px;   // comfortable reading line length
+  margin: 0 auto;     // centre within the wide modal
+}
+
+// When no banner: show title/meta inside content area
+.headerNoBanner {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #edebe9;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative; // close button anchor
+  padding-top: 8px;
+}
+
+.titleSection { flex: 1; }
+
+.typeBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.typeBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #f3f2f1;
+  color: #605e5c;
+  border-radius: 12px;
+  font-size: 0.78em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.announcementTitle {
+  font-size: 1.9em;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+  color: #1a1a2e;
+  line-height: 1.18;
+  letter-spacing: -0.4px;
+}
+
+.authorLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82em;
+  color: #605e5c;
+}
+
+// Edit controls shown below banner (or in header when no banner)
+.articleActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.editButton {
+  background-color: #0078d4;
+  border: none;
+
+  &:hover { background-color: #106ebe; }
+  &:active { background-color: #005a9e; }
+}
+
+.lockedNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.80em;
+  color: #605e5c;
+  background: #f3f2f1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #edebe9;
+}
+
+// ─── Article Body ─────────────────────────────────────────────────────────────
+.bodyBox {
+  font-size: 1.0em;
+  line-height: 1.75;
+  color: #323130;
+  margin-bottom: 28px;
+
+  // Rich text content from SharePoint
+  h1, h2, h3, h4 { color: #1a1a2e; margin-top: 1.2em; margin-bottom: 0.4em; font-weight: 700; }
+  p { margin: 0 0 1em 0; }
+  ul, ol { padding-left: 1.4em; margin-bottom: 1em; }
+  li { margin-bottom: 0.3em; }
+  a { color: #0078d4; text-decoration: underline; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  blockquote {
+    border-left: 4px solid #0078d4;
+    margin: 1em 0;
+    padding: 8px 16px;
+    background: #f3f2f1;
+    color: #605e5c;
+    font-style: italic;
+  }
+  img { max-width: 100%; border-radius: 6px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+  th, td { border: 1px solid #edebe9; padding: 8px 12px; }
+  th { background: #f3f2f1; font-weight: 600; }
+}
+
+// ─── Info Card (Schedule / Attachments) ───────────────────────────────────────
+.infoCard {
+  background: #fff;
+  border: 1px solid #edebe9;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+
+  &:hover { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08); }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f8f8f8;
+  border-bottom: 1px solid #edebe9;
+
+  h3 { margin: 0; font-size: 0.95em; font-weight: 600; color: #323130; }
+}
+
+.cardIcon { color: #0078d4; font-size: 16px; }
+.cardContent { padding: 16px; }
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f2f1;
+
+  &:last-child { border-bottom: none; padding-bottom: 0; }
+  &:first-child { padding-top: 0; }
+}
+
+.label { font-weight: 600; color: #605e5c; font-size: 0.88em; flex-shrink: 0; margin-right: 12px; }
+.value { color: #323130; font-size: 0.88em; text-align: right; flex: 1; }
+
+// ─── Attachments ──────────────────────────────────────────────────────────────
+.attachmentList { display: flex; flex-direction: column; gap: 8px; }
+
+.attachmentCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #faf9f8;
+  border: 1px solid #edebe9;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+
+  &:hover { background: #f0f6ff; border-color: #0078d4; }
+}
+
+.attachmentIconWrapper {
+  width: 36px;
+  height: 36px;
+  background: #fff;
+  border: 1px solid #edebe9;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.attachmentTypeIcon { font-size: 18px; color: #0078d4; }
+
+.attachmentDetails {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.attachmentName {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: #323130;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachmentAction { font-size: 0.75em; color: #0078d4; }
+.attachmentOpenIcon { font-size: 14px; color: #8a8886; flex-shrink: 0; }
+
+// ─── Status / Priority footer ─────────────────────────────────────────────────
+.statusContainer {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #edebe9;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 0.82em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statusDraft     { background: #fff4ce; color: #8a6116;  border: 1px solid #ffb900; }
+.statusScheduled { background: #e1f5fe; color: #01579b;  border: 1px solid #0078d4; }
+.statusActive    { background: #dff6dd; color: #0b5a08;  border: 1px solid #107c10; }
+.statusExpired   { background: #f3f2f1; color: #323130;  border: 1px solid #c8c6c4; }
+
+.priorityBadge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.82em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.priorityCritical { background: #fde7e9; color: #a4262c; border: 1px solid #a4262c; }
+.priorityHigh     { background: #fff4ce; color: #8a4500; border: 1px solid #c8500a; }
+.priorityMedium   { background: #e1f5fe; color: #01579b; border: 1px solid #0078d4; }
+.priorityLow      { background: #f3f2f1; color: #605e5c; border: 1px solid #c8c6c4; }
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 900px) {
+  .modal { max-width: 95vw; }
+  .content { padding: 24px 24px; }
+}
+
+@media (max-width: 640px) {
+  .backdrop { padding: 0; align-items: flex-end; }
+  .modal { max-width: 100%; border-radius: 16px 16px 0 0; max-height: 92vh; }
+  .bannerContainer { height: 200px; }
+  .bannerOverlayContent { padding: 20px 18px; }
+  .bannerTitle { font-size: 1.5em; }
+  .content { padding: 18px 16px; }
+  .announcementTitle { font-size: 1.5em; }
+  .headerNoBanner { flex-direction: column; }
+  .infoRow { flex-direction: column; gap: 4px; }
+  .value { text-align: left; }
+}

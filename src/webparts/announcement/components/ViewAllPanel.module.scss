@@ -1,0 +1,336 @@
+// ─── Modal Overlay ────────────────────────────────────────────────────────────
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  z-index: 100;
+  animation: backdropIn 0.2s ease;
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22), 0 4px 16px rgba(0, 0, 0, 0.10);
+  animation: modalIn 0.22s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.panelHeader {
+  padding: 22px 24px 16px;
+  background-color: #faf9f8;
+  border-bottom: 1px solid #edebe9;
+  flex-shrink: 0;
+}
+
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.panelTitle {
+  font-size: 1.45em;
+  font-weight: 800;
+  margin: 0;
+  color: #1a1a2e;
+  letter-spacing: -0.3px;
+}
+
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #edebe9;
+  background: #fff;
+  color: #605e5c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+
+  &:hover { background: #f3f2f1; color: #323130; border-color: #c8c6c4; }
+}
+
+.addButton {
+  background-color: #107c10;
+  border: none;
+
+  &:hover { background-color: #0b5a08; }
+  &:active { background-color: #094c07; }
+}
+
+// ─── Filter Bar ───────────────────────────────────────────────────────────────
+.filterBar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.searchBox { flex: 1; }
+
+.dateFilterToggle {
+  flex-shrink: 0;
+  height: 32px;
+  border: 1px solid #edebe9;
+  background-color: #fff;
+
+  &:hover { background-color: #f3f2f1; border-color: #0078d4; }
+  &[aria-pressed='true'] { background-color: #e1f5fe; border-color: #0078d4; color: #0078d4; }
+}
+
+.dateFilters {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  padding: 12px;
+  background-color: #faf9f8;
+  border-radius: 6px;
+  border: 1px solid #edebe9;
+  animation: slideDown 0.18s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.datePickerWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  flex: 1;
+  min-width: 150px;
+}
+
+.dateLabel { font-size: 0.85em; font-weight: 600; color: #323130; }
+.datePicker { flex: 1; }
+
+.clearButton {
+  position: absolute;
+  right: 32px;
+  top: 24px;
+  height: 32px;
+  width: 32px;
+  background: none;
+
+  &:hover { background-color: #f3f2f1; }
+  i { font-size: 12px; color: #605e5c; }
+}
+
+.clearAllButton {
+  align-self: flex-end;
+  height: 32px;
+  background-color: #f3f2f1;
+  border: 1px solid #edebe9;
+
+  &:hover { background-color: #e1dfdd; }
+}
+
+.announcementCount {
+  font-size: 0.82em;
+  color: #605e5c;
+  font-weight: 500;
+}
+
+// ─── Scrollable Content ───────────────────────────────────────────────────────
+.panelContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+}
+
+// ─── Sections ─────────────────────────────────────────────────────────────────
+.announcementSection {
+  margin-bottom: 28px;
+  &:last-child { margin-bottom: 0; }
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #edebe9;
+
+  h3 {
+    margin: 0;
+    font-size: 1.05em;
+    font-weight: 700;
+    color: #323130;
+  }
+}
+
+.sectionIcon       { color: #0078d4; font-size: 18px; }
+.sectionIconCritical { color: #a4262c; font-size: 18px; }
+.sectionIconHigh   { color: #c8500a; font-size: 18px; }
+
+.announcementGrid { display: grid; gap: 14px; }
+
+// ─── Card ─────────────────────────────────────────────────────────────────────
+.announcementCard {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+    border-color: #0078d4;
+  }
+
+  &:active { transform: translateY(0); }
+}
+
+.cardBanner {
+  width: 100%;
+  height: 110px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.cardContent { padding: 14px; }
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.cardTitle {
+  flex: 1;
+  font-size: 1.0em;
+  font-weight: 700;
+  margin: 0;
+  color: #1a1a2e;
+  line-height: 1.3;
+}
+
+.cardBadges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.statusBadge {
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-size: 0.7em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statusActive   { background: #dff6dd; color: #0b5a08; }
+.statusScheduled { background: #e1f5fe; color: #01579b; }
+.statusExpired  { background: #f3f2f1; color: #605e5c; }
+.statusDraft    { background: #fff4ce; color: #8a6116; }
+
+.cardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82em;
+  color: #605e5c;
+}
+
+.infoIcon { color: #0078d4; font-size: 13px; flex-shrink: 0; }
+
+.typeTag {
+  padding: 2px 8px;
+  background-color: #f3f2f1;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.priorityBadge {
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 0.7em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.priorityCritical { background: #fde7e9; color: #a4262c; border: 1px solid #a4262c; }
+.priorityHigh     { background: #fff4ce; color: #8a4500; border: 1px solid #c8500a; }
+.priorityMedium   { background: #e1f5fe; color: #01579b; border: 1px solid #0078d4; }
+.priorityLow      { background: #f3f2f1; color: #605e5c; border: 1px solid #c8c6c4; }
+
+// ─── Empty State ──────────────────────────────────────────────────────────────
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #605e5c;
+
+  p { font-size: 1.05em; font-weight: 600; margin: 12px 0 4px; color: #323130; }
+  span { font-size: 0.88em; color: #8a8886; }
+}
+
+.emptyIcon { font-size: 48px; color: #d2d0ce; }
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .backdrop { padding: 0; align-items: flex-end; }
+  .modal { max-width: 100%; border-radius: 14px 14px 0 0; max-height: 92vh; }
+  .panelHeader { padding: 16px; }
+  .panelContent { padding: 14px; }
+  .headerTop { flex-direction: row; align-items: center; }
+  .panelTitle { font-size: 1.2em; }
+  .dateFilters { flex-direction: column; }
+  .datePickerWrapper { min-width: 100%; }
+  .clearAllButton { width: 100%; }
+}
