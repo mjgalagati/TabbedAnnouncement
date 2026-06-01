@@ -9,6 +9,7 @@
   padding: 24px 20px;
   z-index: 200;
   animation: backdropIn 0.2s ease;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 @keyframes backdropIn {
@@ -26,6 +27,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
   box-shadow: 0 32px 100px rgba(0, 0, 0, 0.32), 0 4px 20px rgba(0, 0, 0, 0.14);
   animation: modalIn 0.22s ease;
 }
@@ -218,7 +220,7 @@
   letter-spacing: 0.6px;
 }
 
-.announcementTitle {
+.tabbedAnnouncementTitle {
   font-size: 1.9em;
   font-weight: 800;
   margin: 0 0 10px 0;
@@ -245,11 +247,11 @@
 }
 
 .editButton {
-  background-color: #0078d4;
+  background-color: #171C8F;
   border: none;
 
-  &:hover { background-color: #106ebe; }
-  &:active { background-color: #005a9e; }
+  &:hover { background-color: #171C8F; }
+  &:active { background-color: #171C8F; }
 }
 
 .lockedNote {
@@ -348,7 +350,7 @@
   color: inherit;
   transition: all 0.2s ease;
 
-  &:hover { background: #f0f6ff; border-color: #0078d4; }
+  &:hover { background: #f0f6ff; border-color: #171C8F; }
 }
 
 .attachmentIconWrapper {
@@ -363,7 +365,7 @@
   flex-shrink: 0;
 }
 
-.attachmentTypeIcon { font-size: 18px; color: #0078d4; }
+.attachmentTypeIcon { font-size: 18px; color: #171C8F; }
 
 .attachmentDetails {
   flex: 1;
@@ -382,7 +384,7 @@
   white-space: nowrap;
 }
 
-.attachmentAction { font-size: 0.75em; color: #0078d4; }
+.attachmentAction { font-size: 0.75em; color: #171C8F; }
 .attachmentOpenIcon { font-size: 14px; color: #8a8886; flex-shrink: 0; }
 
 // ─── Status / Priority footer ─────────────────────────────────────────────────
@@ -440,7 +442,7 @@
   .bannerOverlayContent { padding: 20px 18px; }
   .bannerTitle { font-size: 1.5em; }
   .content { padding: 18px 16px; }
-  .announcementTitle { font-size: 1.5em; }
+  .tabbedAnnouncementTitle { font-size: 1.5em; }
   .headerNoBanner { flex-direction: column; }
   .infoRow { flex-direction: column; gap: 4px; }
   .value { text-align: left; }

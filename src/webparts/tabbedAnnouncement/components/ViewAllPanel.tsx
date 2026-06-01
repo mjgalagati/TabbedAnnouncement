@@ -1,20 +1,28 @@
 import * as React from 'react';
-import { PrimaryButton, Icon, SearchBox, DatePicker, IconButton } from '@fluentui/react';
-import { IAnnouncement } from '../models/IAnnouncement';
+import * as ReactDOM from 'react-dom';
+import { Icon, SearchBox, DatePicker, IconButton } from '@fluentui/react';
+import { ITabbedAnnouncement } from '../models/ITabbedAnnouncement';
 import styles from './ViewAllPanel.module.scss';
 import { useState } from 'react';
 
 interface ViewAllPanelProps {
-  announcements: IAnnouncement[];
+  announcements: ITabbedAnnouncement[];
   isOpen: boolean;
   onDismiss: () => void;
-  onSelectAnnouncement: (announcement: IAnnouncement) => void;
-  onAddAnnouncement?: () => void;
+  onSelectTabbedAnnouncement: (announcement: ITabbedAnnouncement) => void;
+  onAddTabbedAnnouncement?: () => void;
+  highlightTypesList: string[];
 }
 
+const TYPE_COLORS = ['#2e7d32','#1565c0','#6a1b9a','#e65100','#00838f','#ad1457','#c62828','#37474f'];
+
 const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
-  announcements, isOpen, onDismiss, onSelectAnnouncement, onAddAnnouncement,
+  announcements, isOpen, onDismiss, onSelectTabbedAnnouncement, onAddTabbedAnnouncement, highlightTypesList,
 }): JSX.Element => {
+  const getTypeColor = (type: string): string => {
+    const idx = highlightTypesList.findIndex(t => t.toLowerCase() === type?.trim().toLowerCase());
+    return idx >= 0 ? TYPE_COLORS[idx % TYPE_COLORS.length] : TYPE_COLORS[0];
+  };
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
@@ -25,26 +33,22 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
   const filteredAnnouncements = announcements.filter(announcement => {
     const matchesSearch =
       announcement.Title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      announcement.AnnouncementType.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      announcement.HighlightType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       announcement.Body?.toLowerCase().includes(searchQuery.toLowerCase());
 
     let matchesDateRange = true;
     if (dateFrom || dateTo) {
-      const publishDate = new Date(announcement.PublishDate);
-      if (dateFrom && dateTo) matchesDateRange = publishDate >= dateFrom && publishDate <= dateTo;
-      else if (dateFrom) matchesDateRange = publishDate >= dateFrom;
-      else if (dateTo) matchesDateRange = publishDate <= dateTo;
+      const createdDate = announcement.Created ? new Date(announcement.Created) : new Date();
+      if (dateFrom && dateTo) matchesDateRange = createdDate >= dateFrom && createdDate <= dateTo;
+      else if (dateFrom) matchesDateRange = createdDate >= dateFrom;
+      else if (dateTo) matchesDateRange = createdDate <= dateTo;
     }
 
     return matchesSearch && matchesDateRange;
   });
 
-  const criticalAnnouncements  = filteredAnnouncements.filter(a => a.Priority?.trim() === 'Critical' && a.Status?.trim() === 'Active');
-  const highAnnouncements      = filteredAnnouncements.filter(a => a.Priority?.trim() === 'High' && a.Status?.trim() === 'Active');
-  const activeAnnouncements    = filteredAnnouncements.filter(a => (a.Priority?.trim() === 'Medium' || a.Priority?.trim() === 'Low') && a.Status?.trim() === 'Active');
-  const scheduledAnnouncements = filteredAnnouncements.filter(a => a.Status?.trim() === 'Scheduled');
+  const publishedAnnouncements = filteredAnnouncements.filter(a => a.Status?.trim() === 'Published');
   const draftAnnouncements     = filteredAnnouncements.filter(a => a.Status?.trim() === 'Draft');
-  const expiredAnnouncements   = filteredAnnouncements.filter(a => a.Status?.trim() === 'Expired');
 
   const formatDate = (date?: Date): string => {
     if (!date) return 'N/A';
@@ -52,9 +56,7 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
   };
 
   const getStatusClass = (status: string): string => {
-    if (status === 'Active')    return styles.statusActive;
-    if (status === 'Scheduled') return styles.statusScheduled;
-    if (status === 'Expired')   return styles.statusExpired;
+    if (status === 'Published') return styles.statusActive;
     return styles.statusDraft;
   };
 
@@ -69,17 +71,12 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
     if (e.target === e.currentTarget) onDismiss();
   };
 
-  const renderAnnouncementCard = (announcement: IAnnouncement): JSX.Element => (
+  const renderTabbedAnnouncementCard = (announcement: ITabbedAnnouncement): JSX.Element => (
     <div
       key={announcement.Id}
-      className={styles.announcementCard}
-      onClick={() => onSelectAnnouncement(announcement)}
+      className={styles.tabbedAnnouncementCard}
+      onClick={() => onSelectTabbedAnnouncement(announcement)}
     >
-      {announcement.BannerImageUrl && (
-        <div className={styles.cardBanner}>
-          <img src={announcement.BannerImageUrl} alt={announcement.Title} />
-        </div>
-      )}
       <div className={styles.cardContent}>
         <div className={styles.cardHeader}>
           <h3 className={styles.cardTitle}>{announcement.Title}</h3>
@@ -95,17 +92,11 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
         <div className={styles.cardInfo}>
           <div className={styles.infoItem}>
             <Icon iconName="Calendar" className={styles.infoIcon} />
-            <span>{formatDate(announcement.PublishDate)}</span>
+            <span>{formatDate(announcement.Created)}</span>
           </div>
-          {announcement.ExpiryDate && (
-            <div className={styles.infoItem}>
-              <Icon iconName="EventDateMissed12" className={styles.infoIcon} />
-              <span>Expires: {formatDate(announcement.ExpiryDate)}</span>
-            </div>
-          )}
           <div className={styles.infoItem}>
             <Icon iconName="Tag" className={styles.infoIcon} />
-            <span className={styles.typeTag}>{announcement.AnnouncementType}</span>
+            <span className={styles.typeTag} style={{ color: getTypeColor(announcement.HighlightType) }}>{announcement.HighlightType}</span>
           </div>
           {announcement.TargetAudienceType && announcement.TargetAudienceType !== 'All' && (
             <div className={styles.infoItem}>
@@ -118,22 +109,19 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
     </div>
   );
 
-  return (
+  return ReactDOM.createPortal(
     <div className={styles.backdrop} onClick={handleBackdropClick} role="dialog" aria-modal="true">
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
 
         {/* ── Header ── */}
         <div className={styles.panelHeader}>
           <div className={styles.headerTop}>
-            <h2 className={styles.panelTitle}>All Announcements</h2>
+            <h2 className={styles.panelTitle}>All Tabbed Announcements</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {onAddAnnouncement && (
-                <PrimaryButton
-                  text="Add Announcement"
-                  iconProps={{ iconName: 'Add' }}
-                  onClick={onAddAnnouncement}
-                  className={styles.addButton}
-                />
+              {onAddTabbedAnnouncement && (
+                <button className={styles.addButton} onClick={onAddTabbedAnnouncement}>
+                  <Icon iconName="Add" /> Add Highlight
+                </button>
               )}
               <button className={styles.closeBtn} onClick={onDismiss} aria-label="Close">
                 <Icon iconName="Cancel" />
@@ -143,7 +131,7 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
 
           <div className={styles.filterBar}>
             <SearchBox
-              placeholder="Search announcements..."
+              placeholder="Search tabbed announcements..."
               onChange={(_, newValue) => setSearchQuery(newValue || '')}
               className={styles.searchBox}
             />
@@ -203,8 +191,8 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
             </div>
           )}
 
-          <div className={styles.announcementCount}>
-            <span>{filteredAnnouncements.length} announcement{filteredAnnouncements.length !== 1 ? 's' : ''} found</span>
+          <div className={styles.tabbedAnnouncementCount}>
+            <span>{filteredAnnouncements.length} tabbed announcement{filteredAnnouncements.length !== 1 ? 's' : ''} found</span>
           </div>
         </div>
 
@@ -213,86 +201,39 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
           {filteredAnnouncements.length === 0 && (
             <div className={styles.emptyState}>
               <Icon iconName="Megaphone" className={styles.emptyIcon} />
-              <p>No announcements found</p>
-              <span>Try adjusting your search or add a new announcement</span>
+              <p>No tabbed announcements found</p>
+              <span>Try adjusting your search or add a new tabbed announcement</span>
             </div>
           )}
 
-          {criticalAnnouncements.length > 0 && (
-            <div className={styles.announcementSection}>
-              <div className={styles.sectionHeader}>
-                <Icon iconName="Warning" className={styles.sectionIconCritical} />
-                <h3>Critical ({criticalAnnouncements.length})</h3>
-              </div>
-              <div className={styles.announcementGrid}>
-                {criticalAnnouncements.map(renderAnnouncementCard)}
-              </div>
-            </div>
-          )}
-
-          {highAnnouncements.length > 0 && (
-            <div className={styles.announcementSection}>
-              <div className={styles.sectionHeader}>
-                <Icon iconName="SortUp" className={styles.sectionIconHigh} />
-                <h3>High Priority ({highAnnouncements.length})</h3>
-              </div>
-              <div className={styles.announcementGrid}>
-                {highAnnouncements.map(renderAnnouncementCard)}
-              </div>
-            </div>
-          )}
-
-          {activeAnnouncements.length > 0 && (
-            <div className={styles.announcementSection}>
+          {publishedAnnouncements.length > 0 && (
+            <div className={styles.tabbedAnnouncementSection}>
               <div className={styles.sectionHeader}>
                 <Icon iconName="MegaphoneSolid" className={styles.sectionIcon} />
-                <h3>Active ({activeAnnouncements.length})</h3>
+                <h3>Published ({publishedAnnouncements.length})</h3>
               </div>
-              <div className={styles.announcementGrid}>
-                {activeAnnouncements.map(renderAnnouncementCard)}
-              </div>
-            </div>
-          )}
-
-          {scheduledAnnouncements.length > 0 && (
-            <div className={styles.announcementSection}>
-              <div className={styles.sectionHeader}>
-                <Icon iconName="ScheduleEventAction" className={styles.sectionIcon} />
-                <h3>Scheduled ({scheduledAnnouncements.length})</h3>
-              </div>
-              <div className={styles.announcementGrid}>
-                {scheduledAnnouncements.map(renderAnnouncementCard)}
+              <div className={styles.tabbedAnnouncementGrid}>
+                {publishedAnnouncements.map(renderTabbedAnnouncementCard)}
               </div>
             </div>
           )}
 
           {draftAnnouncements.length > 0 && (
-            <div className={styles.announcementSection}>
+            <div className={styles.tabbedAnnouncementSection}>
               <div className={styles.sectionHeader}>
                 <Icon iconName="Edit" className={styles.sectionIcon} />
                 <h3>Draft ({draftAnnouncements.length})</h3>
               </div>
-              <div className={styles.announcementGrid}>
-                {draftAnnouncements.map(renderAnnouncementCard)}
-              </div>
-            </div>
-          )}
-
-          {expiredAnnouncements.length > 0 && (
-            <div className={styles.announcementSection}>
-              <div className={styles.sectionHeader}>
-                <Icon iconName="History" className={styles.sectionIcon} />
-                <h3>Expired ({expiredAnnouncements.length})</h3>
-              </div>
-              <div className={styles.announcementGrid}>
-                {expiredAnnouncements.map(renderAnnouncementCard)}
+              <div className={styles.tabbedAnnouncementGrid}>
+                {draftAnnouncements.map(renderTabbedAnnouncementCard)}
               </div>
             </div>
           )}
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

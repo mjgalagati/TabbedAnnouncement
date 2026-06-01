@@ -1,24 +1,25 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { PrimaryButton, Icon } from '@fluentui/react';
-import { IAnnouncement } from '../models/IAnnouncement';
-import styles from './AnnouncementDetailsPanel.module.scss';
+import { ITabbedAnnouncement } from '../models/ITabbedAnnouncement';
+import styles from './TabbedAnnouncementDetailsPanel.module.scss';
 
-interface AnnouncementDetailsPanelProps {
-  announcement?: IAnnouncement;
+interface TabbedAnnouncementDetailsPanelProps {
+  announcement?: ITabbedAnnouncement;
   isOpen: boolean;
   onDismiss: () => void;
-  onEdit: (announcement: IAnnouncement) => void;
+  onEdit: (announcement: ITabbedAnnouncement) => void;
   currentUserId: number;
+  isAdmin: boolean;
 }
 
-const AnnouncementDetailsPanel: React.FC<AnnouncementDetailsPanelProps> = ({
-  announcement, isOpen, onDismiss, onEdit, currentUserId,
+const TabbedAnnouncementDetailsPanel: React.FC<TabbedAnnouncementDetailsPanelProps> = ({
+  announcement, isOpen, onDismiss, onEdit, currentUserId, isAdmin,
 }) => {
   if (!isOpen || !announcement) return null; // eslint-disable-line @rushstack/no-new-null
 
-  const isExpired = announcement.Status === 'Expired';
   const isAuthor = announcement.Author?.Id === currentUserId;
-  const canEdit = !isExpired && isAuthor;
+  const canEdit = isAdmin || isAuthor;
 
   const getFileIcon = (fileName: string): string => {
     const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
@@ -38,7 +39,7 @@ const AnnouncementDetailsPanel: React.FC<AnnouncementDetailsPanelProps> = ({
 
   const hasBanner = !!announcement.BannerImageUrl;
 
-  return (
+  return ReactDOM.createPortal(
     <div className={styles.backdrop} onClick={handleBackdropClick} role="dialog" aria-modal="true">
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
 
@@ -47,14 +48,14 @@ const AnnouncementDetailsPanel: React.FC<AnnouncementDetailsPanelProps> = ({
           <div className={styles.bannerContainer}>
             <img
               src={announcement.BannerImageUrl}
-              alt={announcement.Title ?? 'Announcement Banner'}
+              alt={announcement.Title ?? 'Tabbed Announcement Banner'}
               className={styles.bannerImage}
             />
 
             {/* gradient + title/meta overlaid on banner */}
             <div className={styles.bannerOverlayContent}>
               <div className={styles.bannerTypeBadgeRow}>
-                <span className={styles.bannerTypeBadge}>{announcement.AnnouncementType ?? 'General'}</span>
+                <span className={styles.bannerTypeBadge}>{announcement.HighlightType ?? 'General'}</span>
                 <span className={styles.bannerTypeBadge}>{announcement.Priority}</span>
               </div>
               <h1 className={styles.bannerTitle}>{announcement.Title ?? 'Untitled'}</h1>
@@ -63,18 +64,14 @@ const AnnouncementDetailsPanel: React.FC<AnnouncementDetailsPanelProps> = ({
                   <Icon iconName="Contact" /> {announcement.Author.Title}
                 </span>
               )}
-              <span className={styles.bannerPublishDate}>
-                {announcement.PublishDate.toLocaleDateString('en-US', {
-                  weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
-                })}
-              </span>
+              {announcement.Created && (
+                <span className={styles.bannerPublishDate}>
+                  {announcement.Created.toLocaleDateString('en-US', {
+                    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+                  })}
+                </span>
+              )}
             </div>
-
-            {isExpired && (
-              <div className={styles.expiredOverlay}>
-                <span>Expired</span>
-              </div>
-            )}
 
             <button className={styles.closeBtn} onClick={onDismiss} aria-label="Close">
               <Icon iconName="Cancel" />
@@ -84,7 +81,6 @@ const AnnouncementDetailsPanel: React.FC<AnnouncementDetailsPanelProps> = ({
           // No banner: close button anchored to top-right of modal
           <button
             className={`${styles.closeBtn} ${styles.closeBtnNoImage}`}
-            style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }}
             onClick={onDismiss}
             aria-label="Close"
           >
@@ -101,7 +97,7 @@ const AnnouncementDetailsPanel: React.FC<AnnouncementDetailsPanelProps> = ({
               <div className={styles.headerNoBanner}>
                 <div className={styles.titleSection}>
                   <div className={styles.typeBadgeRow}>
-                    <span className={styles.typeBadge}>{announcement.AnnouncementType ?? 'General'}</span>
+                    <span className={styles.typeBadge}>{announcement.HighlightType ?? 'General'}</span>
                     <span className={`${styles.priorityBadge} ${
                       announcement.Priority === 'Critical' ? styles.priorityCritical :
                       announcement.Priority === 'High'     ? styles.priorityHigh :
@@ -111,7 +107,7 @@ const AnnouncementDetailsPanel: React.FC<AnnouncementDetailsPanelProps> = ({
                       {announcement.Priority}
                     </span>
                   </div>
-                  <h1 className={styles.announcementTitle}>{announcement.Title ?? 'Untitled'}</h1>
+                  <h1 className={styles.tabbedAnnouncementTitle}>{announcement.Title ?? 'Untitled'}</h1>
                   {announcement.Author && (
                     <span className={styles.authorLabel}>
                       <Icon iconName="Contact" /> {announcement.Author.Title}
@@ -122,28 +118,20 @@ const AnnouncementDetailsPanel: React.FC<AnnouncementDetailsPanelProps> = ({
             )}
 
             {/* Edit / locked controls */}
-            {(canEdit || (!canEdit && isExpired) || (!canEdit && !isExpired && !isAuthor)) && (
-              <div className={styles.articleActions}>
-                {canEdit && (
-                  <PrimaryButton
-                    text="Edit"
-                    iconProps={{ iconName: 'Edit' }}
-                    onClick={() => onEdit(announcement)}
-                    className={styles.editButton}
-                  />
-                )}
-                {!canEdit && isExpired && (
-                  <div className={styles.lockedNote}>
-                    <Icon iconName="Lock" /> <span>Edit via SharePoint list</span>
-                  </div>
-                )}
-                {!canEdit && !isExpired && !isAuthor && (
-                  <div className={styles.lockedNote}>
-                    <Icon iconName="Lock" /> <span>Only the creator can edit</span>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className={styles.articleActions}>
+              {canEdit ? (
+                <PrimaryButton
+                  text="Edit"
+                  iconProps={{ iconName: 'Edit' }}
+                  onClick={() => onEdit(announcement)}
+                  className={styles.editButton}
+                />
+              ) : (
+                <div className={styles.lockedNote}>
+                  <Icon iconName="Lock" /> <span>Only editors and the creator can edit</span>
+                </div>
+              )}
+            </div>
 
             {/* Body — rich text rendered as-is from SharePoint */}
             {announcement.Body && (
@@ -188,10 +176,7 @@ const AnnouncementDetailsPanel: React.FC<AnnouncementDetailsPanelProps> = ({
             {/* Status footer */}
             <div className={styles.statusContainer}>
               <span className={`${styles.statusBadge} ${
-                announcement.Status === 'Active'    ? styles.statusActive :
-                announcement.Status === 'Scheduled' ? styles.statusScheduled :
-                announcement.Status === 'Expired'   ? styles.statusExpired :
-                styles.statusDraft
+                announcement.Status === 'Published' ? styles.statusActive : styles.statusDraft
               }`}>
                 {announcement.Status ?? 'Draft'}
               </span>
@@ -200,8 +185,9 @@ const AnnouncementDetailsPanel: React.FC<AnnouncementDetailsPanelProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
-export default AnnouncementDetailsPanel;
+export default TabbedAnnouncementDetailsPanel;

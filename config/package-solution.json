@@ -1,8 +1,8 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "featured-annoucements-client-side-solution",
-    "id": "e8197bd1-cdd0-486e-ae41-d142f3619fb1",
+    "name": "tabbed-annoucements-client-side-solution",
+    "id": "b0c21b3e-94dc-4b71-88dc-d5eb1f56ec9f",
     "version": "1.0.0.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
@@ -16,10 +16,10 @@
     },
     "metadata": {
       "shortDescription": {
-        "default": "Featured Announcements description"
+        "default": "Tabbed Announcements description"
       },
       "longDescription": {
-        "default": "Featured Announcements description"
+        "default": "Tabbed Announcements description"
       },
       "screenshotPaths": [],
       "videoUrl": "",
@@ -27,14 +27,14 @@
     },
     "features": [
       {
-        "title": "Featured Announcement Feature",
-        "description": "The feature that activates elements of the featured announcement solution.",
+        "title": "Tabbed Announcement Feature",
+        "description": "The feature that activates elements of the tabbed announcement solution.",
         "id": "e1a37bf6-6e6e-49ea-b565-4cac215f097d",
         "version": "1.0.0.0"
       }
     ]
   },
   "paths": {
-    "zippedPackage": "solution/featuredannoucements.sppkg"
+    "zippedPackage": "solution/tabbedannoucements.sppkg"
   }
 }

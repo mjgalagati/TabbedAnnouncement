@@ -6,32 +6,30 @@ import "@pnp/sp/files";
 import "@pnp/sp/folders";
 import "@pnp/sp/attachments";
 import "@pnp/sp/site-users/web";
-import { IAnnouncement, IAnnouncementAttachment, IAnnouncementAudience } from "../models/IAnnouncement";
+import { ITabbedAnnouncement, ITabbedAnnouncementAttachment, ITabbedAnnouncementAudience } from "../models/ITabbedAnnouncement";
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
-interface IAnnouncementListItem {
+interface ITabbedAnnouncementListItem {
   Id: number;
   Title: string;
   Body?: string;
-  AnnouncementType: string;
-  PublishDate: string;
-  ExpiryDate?: string;
+  HighlightType: string;
+  Site: string;
   Priority: string;
   Status: string;
   TargetAudienceType?: string;
-  TargetAudience?: IAnnouncementAudience[];
+  TargetAudience?: ITabbedAnnouncementAudience[];
   BannerImageUrl?: { Url: string; Description?: string };
   Author?: { Id: number; Title: string };
   AttachmentFiles?: { FileName: string; ServerRelativeUrl: string }[];
   Created: string;
 }
 
-interface IAnnouncementItemData {
+interface ITabbedAnnouncementItemData {
   Title: string;
   Body: string;
-  AnnouncementType: string;
-  PublishDate: string | undefined;
-  ExpiryDate?: string | undefined;
+  HighlightType: string;
+  Site: string;
   Priority: string;
   Status: string;
   TargetAudienceType?: string;
@@ -46,7 +44,7 @@ const PRIORITY_ORDER: Record<string, number> = {
   Low: 3,
 };
 
-export class AnnouncementService {
+export class TabbedAnnouncementService {
   private listName: string;
   private sp: SPFI;
 
@@ -55,9 +53,7 @@ export class AnnouncementService {
     this.sp = spfi().using(SPFx(context));
   }
 
-  public async getAnnouncements(currentUserLogin: string): Promise<IAnnouncement[]> {
-    const now = new Date();
-
+  public async getTabbedAnnouncements(): Promise<ITabbedAnnouncement[]> {
     let currentUserTitle = "";
     try {
       const currentUser = await this.sp.web.currentUser.select("Title")();
@@ -66,65 +62,25 @@ export class AnnouncementService {
       console.warn("Could not fetch current user title");
     }
 
-    const items: IAnnouncementListItem[] = await this.sp.web.lists
+    const items: ITabbedAnnouncementListItem[] = await this.sp.web.lists
       .getByTitle(this.listName)
       .items.select(
-        "Id", "Title", "Body", "AnnouncementType",
-        "PublishDate", "ExpiryDate", "Priority", "Status",
+        "Id", "Title", "Body", "HighlightType", "Site",
+        "Priority", "Status",
         "TargetAudienceType", "TargetAudience/Id", "TargetAudience/Title",
         "BannerImageUrl", "Author/Id", "Author/Title",
         "AttachmentFiles", "Created"
       )
       .expand("TargetAudience", "Author", "AttachmentFiles")();
 
-    const statusUpdates: Promise<void>[] = [];
-
-    for (const i of items) {
-    // Critical: force Active immediately
-    if (i.Priority?.trim() === "Critical" && i.Status?.trim() !== "Active" && i.Status?.trim() !== "Expired") {
-        statusUpdates.push(
-        this.sp.web.lists
-            .getByTitle(this.listName)
-            .items.getById(i.Id)
-            .update({ Status: "Active" })
-            .then(() => { i.Status = "Active"; })
-        );
-    }
-
-    // Scheduled → Active when PublishDate is hit
-    if (i.Status?.trim() === "Scheduled" && new Date(i.PublishDate) <= now) {
-        statusUpdates.push(
-        this.sp.web.lists
-            .getByTitle(this.listName)
-            .items.getById(i.Id)
-            .update({ Status: "Active" })
-            .then(() => { i.Status = "Active"; })
-        );
-    }
-
-    // Active → Expired when ExpiryDate is passed
-    if (i.Status?.trim() === "Active" && i.ExpiryDate && new Date(i.ExpiryDate) < now) {
-        statusUpdates.push(
-        this.sp.web.lists
-            .getByTitle(this.listName)
-            .items.getById(i.Id)
-            .update({ Status: "Expired" })
-            .then(() => { i.Status = "Expired"; })
-        );
-    }
-    }
-
-    await Promise.all(statusUpdates);
-
-    const announcements: IAnnouncement[] = items.map((i) => ({
+    const highlights: ITabbedAnnouncement[] = items.map((i) => ({
       Id: i.Id,
       Title: i.Title,
       Body: i.Body,
-      AnnouncementType: i.AnnouncementType,
-      PublishDate: new Date(i.PublishDate),
-      ExpiryDate: i.ExpiryDate ? new Date(i.ExpiryDate) : undefined,
+      HighlightType: i.HighlightType,
+      Site: i.Site,
       Priority: i.Priority as "Critical" | "High" | "Medium" | "Low",
-      Status: i.Status as "Draft" | "Scheduled" | "Active" | "Expired",
+      Status: i.Status as "Draft" | "Published",
       TargetAudienceType: (i.TargetAudienceType || "All") as "All" | "Specific" | "Except",
       TargetAudience: i.TargetAudience ?? [],
       BannerImageUrl: i.BannerImageUrl?.Url,
@@ -132,35 +88,31 @@ export class AnnouncementService {
       Attachments: (i.AttachmentFiles ?? []).map((f) => ({
         FileName: f.FileName,
         ServerRelativeUrl: f.ServerRelativeUrl,
-      } as IAnnouncementAttachment)),
+      } as ITabbedAnnouncementAttachment)),
       Created: new Date(i.Created),
     }));
 
-    // Target Audience filtering
-    const filtered = announcements.filter((a) => {
-      const type = a.TargetAudienceType || "All";
+    const filtered = highlights.filter((h) => {
+      const type = h.TargetAudienceType || "All";
       if (type === "All") return true;
-      const audienceTitles = (a.TargetAudience || []).map((p) => p.Title?.toLowerCase().trim());
+      const audienceTitles = (h.TargetAudience || []).map((p) => p.Title?.toLowerCase().trim());
       const isInAudience = audienceTitles.includes(currentUserTitle);
       if (type === "Specific") return isInAudience;
       if (type === "Except") return !isInAudience;
       return true;
     });
 
-    // Sort: Priority → PublishDate → Created
     filtered.sort((a, b) => {
       const priorityDiff = PRIORITY_ORDER[a.Priority] - PRIORITY_ORDER[b.Priority];
       if (priorityDiff !== 0) return priorityDiff;
-      const publishDiff = a.PublishDate.getTime() - b.PublishDate.getTime();
-      if (publishDiff !== 0) return publishDiff;
-      return (a.Created?.getTime() ?? 0) - (b.Created?.getTime() ?? 0);
+      return (b.Created?.getTime() ?? 0) - (a.Created?.getTime() ?? 0);
     });
 
     return filtered;
   }
 
-  public async addAnnouncement(
-    announcement: Partial<IAnnouncement>,
+  public async addTabbedAnnouncement(
+    highlight: Partial<ITabbedAnnouncement>,
     bannerFile?: File,
     attachments?: File[]
   ): Promise<void> {
@@ -170,29 +122,25 @@ export class AnnouncementService {
       catch (error) { console.error("Banner upload failed:", error); }
     }
 
-    // Critical always goes Active immediately
-    const resolvedStatus = announcement.Priority === "Critical" ? "Active" : (announcement.Status || "Draft");
-
-    const itemData: IAnnouncementItemData = {
-      Title: announcement.Title ?? "",
-      Body: announcement.Body || "",
-      AnnouncementType: announcement.AnnouncementType ?? "",
-      PublishDate: announcement.PublishDate?.toISOString(),
-      ExpiryDate: announcement.ExpiryDate?.toISOString() ?? undefined,
-      Priority: announcement.Priority ?? "Medium",
-      Status: resolvedStatus,
-      TargetAudienceType: announcement.TargetAudienceType || "All",
+    const itemData: ITabbedAnnouncementItemData = {
+      Title: highlight.Title ?? "",
+      Body: highlight.Body || "",
+      HighlightType: highlight.HighlightType ?? "",
+      Site: highlight.Site ?? "",
+      Priority: highlight.Priority ?? "Medium",
+      Status: highlight.Status ?? "Draft",
+      TargetAudienceType: highlight.TargetAudienceType || "All",
     };
 
-    if (announcement.TargetAudience && announcement.TargetAudience.length > 0) {
-      const audienceIds = announcement.TargetAudience
+    if (highlight.TargetAudience && highlight.TargetAudience.length > 0) {
+      const audienceIds = highlight.TargetAudience
         .filter((p) => p && typeof p.Id === "number" && p.Id > 0)
         .map((p) => p.Id);
       if (audienceIds.length > 0) itemData.TargetAudienceId = audienceIds;
     }
 
     if (bannerUrl) {
-      itemData.BannerImageUrl = { Url: bannerUrl, Description: announcement.Title || "Announcement Banner" };
+      itemData.BannerImageUrl = { Url: bannerUrl, Description: highlight.Title || "Highlight Banner" };
     }
 
     const addResult = await this.sp.web.lists.getByTitle(this.listName).items.add(itemData);
@@ -202,54 +150,50 @@ export class AnnouncementService {
     }
   }
 
-  public async updateAnnouncement(
-    announcementId: number,
-    announcement: Partial<IAnnouncement>,
+  public async updateTabbedAnnouncement(
+    highlightId: number,
+    highlight: Partial<ITabbedAnnouncement>,
     bannerFile?: File,
     attachments?: File[],
     deletedAttachmentNames?: string[]
   ): Promise<void> {
-    let bannerUrl = announcement.BannerImageUrl;
+    let bannerUrl = highlight.BannerImageUrl;
     if (bannerFile) {
       try { bannerUrl = await this.uploadBanner(bannerFile); }
       catch (error) { console.error("Banner upload failed:", error); }
     }
 
-    // Critical always goes Active immediately
-    const resolvedStatus = announcement.Priority === "Critical" ? "Active" : (announcement.Status || "Draft");
-
-    const itemData: IAnnouncementItemData = {
-      Title: announcement.Title ?? "",
-      Body: announcement.Body || "",
-      AnnouncementType: announcement.AnnouncementType ?? "",
-      PublishDate: announcement.PublishDate?.toISOString(),
-      ExpiryDate: announcement.ExpiryDate?.toISOString() ?? undefined,
-      Priority: announcement.Priority ?? "Medium",
-      Status: resolvedStatus,
-      TargetAudienceType: announcement.TargetAudienceType || "All",
+    const itemData: ITabbedAnnouncementItemData = {
+      Title: highlight.Title ?? "",
+      Body: highlight.Body || "",
+      HighlightType: highlight.HighlightType ?? "",
+      Site: highlight.Site ?? "",
+      Priority: highlight.Priority ?? "Medium",
+      Status: highlight.Status ?? "Draft",
+      TargetAudienceType: highlight.TargetAudienceType || "All",
     };
 
-    if (announcement.TargetAudience && announcement.TargetAudience.length > 0) {
-      const audienceIds = announcement.TargetAudience
+    if (highlight.TargetAudience && highlight.TargetAudience.length > 0) {
+      const audienceIds = highlight.TargetAudience
         .filter((p) => p && typeof p.Id === "number" && p.Id > 0)
         .map((p) => p.Id);
       if (audienceIds.length > 0) itemData.TargetAudienceId = audienceIds;
     }
 
     if (bannerUrl) {
-      itemData.BannerImageUrl = { Url: bannerUrl, Description: announcement.Title || "Announcement Banner" };
-    } else if (!bannerFile && !announcement.BannerImageUrl) {
+      itemData.BannerImageUrl = { Url: bannerUrl, Description: highlight.Title || "Highlight Banner" };
+    } else if (!bannerFile && !highlight.BannerImageUrl) {
       itemData.BannerImageUrl = undefined;
     }
 
-    await this.sp.web.lists.getByTitle(this.listName).items.getById(announcementId).update(itemData);
+    await this.sp.web.lists.getByTitle(this.listName).items.getById(highlightId).update(itemData);
 
     if (deletedAttachmentNames && deletedAttachmentNames.length > 0) {
-      await this.deleteAttachments(announcementId, deletedAttachmentNames);
+      await this.deleteAttachments(highlightId, deletedAttachmentNames);
     }
 
     if (attachments && attachments.length > 0) {
-      await this.uploadAttachments(announcementId, attachments);
+      await this.uploadAttachments(highlightId, attachments);
     }
   }
 
@@ -281,7 +225,7 @@ export class AnnouncementService {
   }
 
   private async uploadBanner(file: File): Promise<string> {
-    const folderPath = "SiteAssets/AnnouncementsImages";
+    const folderPath = "SiteAssets/TabbedAnnouncementImages";
     const fileName = Date.now().toString() + "_" + file.name;
     try {
       try {

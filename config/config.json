@@ -2,18 +2,18 @@
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
   "version": "2.0",
   "bundles": {
-    "announcement-web-part": {
+    "tabbed-announcement-web-part": {
       "components": [
         {
-          "entrypoint": "./lib/webparts/announcement/AnnouncementWebPart.js",
-          "manifest": "./src/webparts/announcement/AnnouncementWebPart.manifest.json"
+          "entrypoint": "./lib/webparts/tabbedAnnouncement/TabbedAnnouncementWebPart.js",
+          "manifest": "./src/webparts/tabbedAnnouncement/TabbedAnnouncementWebPart.manifest.json"
         }
       ]
     }
   },
   "externals": {},
   "localizedResources": {
-    "AnnouncementWebPartStrings": "lib/webparts/announcement/loc/{locale}.js",
+    "TabbedAnnouncementWebPartStrings": "lib/webparts/tabbedAnnouncement/loc/{locale}.js",
     "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
   }
 }

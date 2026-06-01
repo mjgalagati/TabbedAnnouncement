@@ -1,38 +1,31 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import * as ReactDOM from 'react-dom';
 import {
   PrimaryButton, DefaultButton,
   TextField, Dropdown, IDropdownOption, Icon,
   Spinner, SpinnerSize, MessageBar, MessageBarType,
-  DatePicker, IconButton,
 } from '@fluentui/react';
 import { PeoplePicker, PrincipalType } from '@pnp/spfx-controls-react/lib/PeoplePicker';
-import { RichText } from '@pnp/spfx-controls-react/lib/RichText';
-import { IAnnouncement, IAnnouncementAttachment, IAnnouncementAudience } from '../models/IAnnouncement';
+import { ITabbedAnnouncement, ITabbedAnnouncementAttachment, ITabbedAnnouncementAudience } from '../models/ITabbedAnnouncement';
 import { WebPartContext } from '@microsoft/sp-webpart-base';
-import styles from './AddEditAnnouncement.module.scss';
+import styles from './AddEditTabbedAnnouncement.module.scss';
 
-interface AddEditAnnouncementProps {
+interface AddEditTabbedAnnouncementProps {
   isOpen: boolean;
   mode: 'add' | 'edit';
-  announcement?: IAnnouncement;
+  announcement?: ITabbedAnnouncement;
   context: WebPartContext;
+  highlightTypeOptions: string[];
+  siteOptions: string[];
   onDismiss: () => void;
   onSave: (
-    data: Partial<IAnnouncement>,
+    data: Partial<ITabbedAnnouncement>,
     bannerFile?: File,
     attachments?: File[],
     deletedAttachmentNames?: string[]
   ) => Promise<void>;
 }
-
-const ANNOUNCEMENT_TYPES: IDropdownOption[] = [
-  { key: 'Company News',    text: 'Company News' },
-  { key: 'Department',      text: 'Department' },
-  { key: 'Policy/HR',       text: 'Policy/HR' },
-  { key: 'Product/Project', text: 'Product/Project' },
-  { key: 'General',         text: 'General' },
-];
 
 const PRIORITY_OPTIONS: IDropdownOption[] = [
   { key: 'Critical', text: 'Critical' },
@@ -43,7 +36,7 @@ const PRIORITY_OPTIONS: IDropdownOption[] = [
 
 const STATUS_OPTIONS: IDropdownOption[] = [
   { key: 'Draft',     text: 'Draft' },
-  { key: 'Scheduled', text: 'Scheduled' },
+  { key: 'Published', text: 'Published' },
 ];
 
 const AUDIENCE_TYPE_OPTIONS: IDropdownOption[] = [
@@ -70,55 +63,57 @@ const formatFileSize = (bytes: number): string => {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
-const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
-  isOpen, mode, announcement, context, onDismiss, onSave,
+const AddEditTabbedAnnouncement: React.FC<AddEditTabbedAnnouncementProps> = ({
+  isOpen, mode, announcement, context, highlightTypeOptions, siteOptions, onDismiss, onSave,
 }) => {
+  const bodyEditorRef = useRef<HTMLDivElement>(null);
+
   const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [announcementType, setAnnouncementType] = useState('General');
-  const [publishDate, setPublishDate] = useState<Date | undefined>(new Date());
-  const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
+  const [highlightType, setHighlightType] = useState('');
+  const [site, setSite] = useState('All');
   const [priority, setPriority] = useState<'Critical' | 'High' | 'Medium' | 'Low'>('Medium');
-  const [status, setStatus] = useState<'Draft' | 'Scheduled'>('Draft');
+  const [status, setStatus] = useState<'Draft' | 'Published'>('Draft');
   const [targetAudienceType, setTargetAudienceType] = useState<'All' | 'Specific' | 'Except'>('All');
-  const [targetAudience, setTargetAudience] = useState<IAnnouncementAudience[]>([]);
+  const [targetAudience, setTargetAudience] = useState<ITabbedAnnouncementAudience[]>([]);
   const [bannerFile, setBannerFile] = useState<File | undefined>(undefined);
   const [bannerPreview, setBannerPreview] = useState<string | undefined>(undefined);
   const [newAttachments, setNewAttachments] = useState<File[]>([]);
-  const [existingAttachments, setExistingAttachments] = useState<IAnnouncementAttachment[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<ITabbedAnnouncementAttachment[]>([]);
   const [deletedAttachmentNames, setDeletedAttachmentNames] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [saveError, setSaveError] = useState<string | undefined>(undefined);
 
-  const isCritical = priority === 'Critical';
+  const highlightTypeDropdownOptions: IDropdownOption[] = highlightTypeOptions.map(t => ({ key: t, text: t }));
+  const siteDropdownOptions: IDropdownOption[] = [
+    { key: 'All', text: 'All (appears in every tab)' },
+    ...siteOptions.map(s => ({ key: s, text: s })),
+  ];
 
   useEffect(() => {
     if (isOpen) {
       if (mode === 'edit' && announcement) {
         setTitle(announcement.Title ?? '');
-        setBody(announcement.Body ?? '');
-        setAnnouncementType(announcement.AnnouncementType ?? 'General');
-        setPublishDate(announcement.PublishDate ?? new Date());
-        setExpiryDate(announcement.ExpiryDate ?? undefined);
+        setHighlightType(announcement.HighlightType ?? '');
+        setSite(announcement.Site ?? 'All');
         setPriority(announcement.Priority ?? 'Medium');
-        setStatus((announcement.Status === 'Draft' || announcement.Status === 'Scheduled') ? announcement.Status : 'Draft');
+        setStatus((announcement.Status === 'Draft' || announcement.Status === 'Published') ? announcement.Status : 'Draft');
         setTargetAudienceType(announcement.TargetAudienceType ?? 'All');
         setTargetAudience(announcement.TargetAudience ?? []);
         setBannerPreview(announcement.BannerImageUrl ?? undefined);
         setExistingAttachments(announcement.Attachments ?? []);
+        if (bodyEditorRef.current) bodyEditorRef.current.innerHTML = announcement.Body ?? '';
       } else {
         setTitle('');
-        setBody('');
-        setAnnouncementType('General');
-        setPublishDate(new Date());
-        setExpiryDate(undefined);
+        setHighlightType(highlightTypeOptions[0] ?? '');
+        setSite('All');
         setPriority('Medium');
         setStatus('Draft');
         setTargetAudienceType('All');
         setTargetAudience([]);
         setBannerPreview(undefined);
         setExistingAttachments([]);
+        if (bodyEditorRef.current) bodyEditorRef.current.innerHTML = '';
       }
       setBannerFile(undefined);
       setNewAttachments([]);
@@ -130,15 +125,15 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
 
   if (!isOpen) return null; // eslint-disable-line @rushstack/no-new-null
 
+  const execFormat = (command: string): void => {
+    document.execCommand(command, false, undefined);
+  };
+
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
     if (!title.trim()) newErrors.title = 'Title is required';
-    if (!announcementType) newErrors.announcementType = 'Announcement type is required';
-    if (!isCritical && !publishDate) newErrors.publishDate = 'Publish date is required';
-    if (isCritical && !expiryDate) newErrors.expiryDate = 'Expiry date is required for Critical announcements';
-    if (expiryDate && publishDate && expiryDate <= publishDate) {
-      newErrors.expiryDate = 'Expiry date must be after publish date';
-    }
+    if (!highlightType) newErrors.highlightType = 'Highlight type is required';
+    if (!site) newErrors.site = 'Site is required';
     if (targetAudienceType !== 'All' && targetAudience.length === 0) {
       newErrors.targetAudience = 'Please select at least one person for the target audience';
     }
@@ -151,14 +146,13 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
     setIsSaving(true);
     setSaveError(undefined);
     try {
-      const data: Partial<IAnnouncement> = {
+      const data: Partial<ITabbedAnnouncement> = {
         Title: title,
-        Body: body,
-        AnnouncementType: announcementType,
-        PublishDate: isCritical ? new Date() : publishDate,
-        ExpiryDate: expiryDate,
+        Body: bodyEditorRef.current?.innerHTML ?? '',
+        HighlightType: highlightType,
+        Site: site,
         Priority: priority,
-        Status: isCritical ? 'Active' : status,
+        Status: status,
         TargetAudienceType: targetAudienceType,
         TargetAudience: targetAudience,
         BannerImageUrl: bannerPreview,
@@ -166,7 +160,7 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
       await onSave(data, bannerFile, newAttachments, deletedAttachmentNames);
     } catch (err) {
       console.error('Save error:', err);
-      setSaveError('Failed to save announcement. Please try again.');
+      setSaveError('Failed to save highlight. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -207,7 +201,7 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
     if (e.target === e.currentTarget) onDismiss();
   };
 
-  return (
+  const modal = (
     <div className={styles.backdrop} onClick={handleBackdropClick} role="dialog" aria-modal="true">
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
 
@@ -215,7 +209,7 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
         <div className={styles.panelHeader}>
           <h2 className={styles.panelTitle}>
             <Icon iconName={mode === 'add' ? 'Add' : 'Edit'} className={styles.titleIcon} />
-            {mode === 'add' ? 'New Announcement' : 'Edit Announcement'}
+            {mode === 'add' ? 'New Highlight' : 'Edit Highlight'}
           </h2>
           <button className={styles.closeBtn} onClick={onDismiss} aria-label="Close">
             <Icon iconName="Cancel" />
@@ -242,29 +236,82 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
               value={title}
               onChange={(_, v) => setTitle(v ?? '')}
               errorMessage={errors.title}
-              placeholder="Enter announcement title"
+              placeholder="Enter highlight title"
             />
             <Dropdown
-              label="Announcement Type"
+              label="Highlight Type"
               required
-              selectedKey={announcementType}
-              options={ANNOUNCEMENT_TYPES}
-              onChange={(_, o) => setAnnouncementType(o?.key as string ?? 'General')}
-              errorMessage={errors.announcementType}
+              selectedKey={highlightType}
+              options={highlightTypeDropdownOptions}
+              onChange={(_, o) => setHighlightType(o?.key as string ?? '')}
+              errorMessage={errors.highlightType}
+              disabled={highlightTypeDropdownOptions.length === 0}
+              placeholder={highlightTypeDropdownOptions.length === 0 ? 'Configure Highlight Types in web part settings' : 'Select highlight type'}
+            />
+            <Dropdown
+              label="Site"
+              required
+              selectedKey={site}
+              options={siteDropdownOptions}
+              onChange={(_, o) => setSite(o?.key as string ?? 'All')}
+              errorMessage={errors.site}
+              disabled={siteDropdownOptions.length === 0}
+              placeholder="Select site"
             />
           </div>
 
-          {/* Body — Rich Text */}
+          {/* Body */}
           <div className={styles.formSection}>
-            <div className={styles.sectionHeader}>
-              <Icon iconName="AlignLeft" className={styles.sectionIcon} />
-              <h3>Body</h3>
-            </div>
-            <div className={styles.richTextWrapper}>
-              <RichText
-                value={body}
-                onChange={(newValue) => { setBody(newValue ?? ''); return newValue ?? ''; }}
-                isEditMode={true}
+            <div className={styles.bodyField}>
+              <label className={styles.bodyLabel}>Body</label>
+              <div className={styles.bodyToolbar}>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  title="Bold"
+                  onMouseDown={(e) => { e.preventDefault(); execFormat('bold'); }}
+                >
+                  <b>B</b>
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  title="Italic"
+                  onMouseDown={(e) => { e.preventDefault(); execFormat('italic'); }}
+                >
+                  <i>I</i>
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  title="Underline"
+                  onMouseDown={(e) => { e.preventDefault(); execFormat('underline'); }}
+                >
+                  <u>U</u>
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  title="Bullet list"
+                  onMouseDown={(e) => { e.preventDefault(); execFormat('insertUnorderedList'); }}
+                >
+                  <Icon iconName="BulletedList" />
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  title="Numbered list"
+                  onMouseDown={(e) => { e.preventDefault(); execFormat('insertOrderedList'); }}
+                >
+                  <Icon iconName="NumberedList" />
+                </button>
+              </div>
+              <div
+                ref={bodyEditorRef}
+                className={styles.bodyEditor}
+                contentEditable={true}
+                data-placeholder="Write your message here…"
+                suppressContentEditableWarning={true}
               />
             </div>
           </div>
@@ -315,79 +362,21 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
               options={PRIORITY_OPTIONS}
               onChange={(_, o) => setPriority(o?.key as 'Critical' | 'High' | 'Medium' | 'Low' ?? 'Medium')}
             />
-            {isCritical && (
-              <MessageBar messageBarType={MessageBarType.severeWarning} className={styles.criticalWarning}>
-                <strong>Critical Priority — Post Now!</strong> This announcement will be published
-                immediately upon saving, bypassing Draft and Scheduled status. It will supersede all
-                other announcements in the carousel regardless of publish date. An expiry date is required.
-              </MessageBar>
-            )}
           </div>
 
-          {/* Scheduling — hidden for Critical */}
-          {!isCritical && (
-            <div className={styles.formSection}>
-              <div className={styles.sectionHeader}>
-                <Icon iconName="Calendar" className={styles.sectionIcon} />
-                <h3>Scheduling</h3>
-              </div>
-              <Dropdown
-                label="Status"
-                selectedKey={status}
-                options={STATUS_OPTIONS}
-                onChange={(_, o) => setStatus(o?.key as 'Draft' | 'Scheduled' ?? 'Draft')}
-              />
-              <div className={styles.dateRow}>
-                <div className={styles.dateField}>
-                  <DatePicker
-                    label="Publish Date *"
-                    value={publishDate}
-                    onSelectDate={(d) => setPublishDate(d ?? undefined)}
-                    formatDate={(d) => d?.toLocaleDateString() ?? ''}
-                    placeholder="Select publish date"
-                  />
-                  {errors.publishDate && <span className={styles.error}>{errors.publishDate}</span>}
-                </div>
-                <div className={styles.dateField}>
-                  <DatePicker
-                    label="Expiry Date"
-                    value={expiryDate}
-                    onSelectDate={(d) => setExpiryDate(d ?? undefined)}
-                    formatDate={(d) => d?.toLocaleDateString() ?? ''}
-                    placeholder="Select expiry date (optional)"
-                    minDate={publishDate}
-                  />
-                  {errors.expiryDate && <span className={styles.error}>{errors.expiryDate}</span>}
-                  {expiryDate && (
-                    <IconButton
-                      iconProps={{ iconName: 'Clear' }}
-                      onClick={() => setExpiryDate(undefined)}
-                      title="Clear expiry date"
-                    />
-                  )}
-                </div>
-              </div>
+          {/* Scheduling */}
+          <div className={styles.formSection}>
+            <div className={styles.sectionHeader}>
+              <Icon iconName="Calendar" className={styles.sectionIcon} />
+              <h3>Scheduling</h3>
             </div>
-          )}
-
-          {/* Expiry only — Critical */}
-          {isCritical && (
-            <div className={styles.formSection}>
-              <div className={styles.sectionHeader}>
-                <Icon iconName="Calendar" className={styles.sectionIcon} />
-                <h3>Expiry Date</h3>
-              </div>
-              <DatePicker
-                label="Expiry Date *"
-                value={expiryDate}
-                onSelectDate={(d) => setExpiryDate(d ?? undefined)}
-                formatDate={(d) => d?.toLocaleDateString() ?? ''}
-                placeholder="Select expiry date"
-                minDate={new Date()}
-              />
-              {errors.expiryDate && <span className={styles.error}>{errors.expiryDate}</span>}
-            </div>
-          )}
+            <Dropdown
+              label="Status"
+              selectedKey={status}
+              options={STATUS_OPTIONS}
+              onChange={(_, o) => setStatus(o?.key as 'Draft' | 'Published' ?? 'Draft')}
+            />
+          </div>
 
           {/* Target Audience */}
           <div className={styles.formSection}>
@@ -406,12 +395,12 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
             />
             {targetAudienceType === 'Specific' && (
               <span className={styles.fieldHint}>
-                Only the selected people below will see this announcement.
+                Only the selected people below will see this highlight.
               </span>
             )}
             {targetAudienceType === 'Except' && (
               <span className={styles.fieldHint}>
-                Everyone will see this announcement <strong>except</strong> the selected people below.
+                Everyone will see this highlight <strong>except</strong> the selected people below.
               </span>
             )}
             {targetAudienceType !== 'All' && (
@@ -424,7 +413,7 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
                   resolveDelay={1000}
                   defaultSelectedUsers={targetAudience.map(p => p.Title)}
                   onChange={(items) => {
-                    const people: IAnnouncementAudience[] = (items || []).map((item: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+                    const people: ITabbedAnnouncementAudience[] = (items || []).map((item: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
                       Id: parseInt(item.id, 10),
                       Title: item.text,
                     }));
@@ -506,7 +495,7 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
         <div className={styles.actionButtons}>
           <DefaultButton text="Cancel" onClick={onDismiss} disabled={isSaving} />
           <PrimaryButton
-            text={isSaving ? 'Saving...' : mode === 'add' ? 'Add Announcement' : 'Save Changes'}
+            text={isSaving ? 'Saving...' : mode === 'add' ? 'Add Highlight' : 'Save Changes'}
             onClick={handleSave}
             disabled={isSaving}
           >
@@ -517,6 +506,8 @@ const AddEditAnnouncement: React.FC<AddEditAnnouncementProps> = ({
       </div>
     </div>
   );
+
+  return ReactDOM.createPortal(modal, document.body);
 };
 
-export default AddEditAnnouncement;
+export default AddEditTabbedAnnouncement;

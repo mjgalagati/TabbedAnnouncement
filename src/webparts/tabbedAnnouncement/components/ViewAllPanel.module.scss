@@ -9,6 +9,7 @@
   padding: 24px 20px;
   z-index: 100;
   animation: backdropIn 0.2s ease;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 @keyframes backdropIn {
@@ -77,11 +78,27 @@
 }
 
 .addButton {
-  background-color: #107c10;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #FF5E00;
+  background: none;
+  border: 1.5px solid #FF5E00;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
 
-  &:hover { background-color: #0b5a08; }
-  &:active { background-color: #094c07; }
+  &:hover {
+    background: #FF5E00;
+    color: #fff;
+  }
+
+  &:active { background: #FF5E00; color: #fff; }
 }
 
 // ─── Filter Bar ───────────────────────────────────────────────────────────────
@@ -155,7 +172,7 @@
   &:hover { background-color: #e1dfdd; }
 }
 
-.announcementCount {
+.tabbedAnnouncementCount {
   font-size: 0.82em;
   color: #605e5c;
   font-weight: 500;
@@ -173,7 +190,7 @@
 }
 
 // ─── Sections ─────────────────────────────────────────────────────────────────
-.announcementSection {
+.tabbedAnnouncementSection {
   margin-bottom: 28px;
   &:last-child { margin-bottom: 0; }
 }
@@ -196,12 +213,12 @@
 
 .sectionIcon       { color: #0078d4; font-size: 18px; }
 .sectionIconCritical { color: #a4262c; font-size: 18px; }
-.sectionIconHigh   { color: #c8500a; font-size: 18px; }
+.sectionIconHigh   { color: #FF5E00; font-size: 18px; }
 
-.announcementGrid { display: grid; gap: 14px; }
+.tabbedAnnouncementGrid { display: grid; gap: 14px; }
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
-.announcementCard {
+.tabbedAnnouncementCard {
   background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 10px;
