@@ -138,6 +138,7 @@ const TabbedAnnouncementsCarousel = (props: ITabbedAnnouncementsCarouselProps): 
         onSelectTabbedAnnouncement={openDetails}
         onAddTabbedAnnouncement={props.isAdmin ? openAdd : undefined}
         highlightTypesList={highlightTypesList}
+        sitesList={sitesList}
       />
       <TabbedAnnouncementDetailsPanel
         announcement={selectedHighlight}

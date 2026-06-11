@@ -101,6 +101,40 @@
   &:active { background: #FF5E00; color: #fff; }
 }
 
+// ─── Tabs row ─────────────────────────────────────────────────────────────────
+.tabsRow {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: 2px solid #e8e8e8;
+  margin-bottom: 12px;
+}
+
+.tab {
+  padding: 8px 18px 10px 0;
+  font-size: 0.76em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6b6b6b;
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.18s, border-color 0.18s;
+  white-space: nowrap;
+  outline: none;
+
+  &:hover { color: #FF5E00; }
+}
+
+.tabActive {
+  color: #FF5E00;
+  border-bottom-color: #FF5E00;
+}
+
 // ─── Filter Bar ───────────────────────────────────────────────────────────────
 .filterBar {
   display: flex;

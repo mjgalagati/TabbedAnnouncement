@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import { Icon, SearchBox, DatePicker, IconButton } from '@fluentui/react';
 import { ITabbedAnnouncement } from '../models/ITabbedAnnouncement';
 import styles from './ViewAllPanel.module.scss';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ViewAllPanelProps {
   announcements: ITabbedAnnouncement[];
@@ -12,12 +12,13 @@ interface ViewAllPanelProps {
   onSelectTabbedAnnouncement: (announcement: ITabbedAnnouncement) => void;
   onAddTabbedAnnouncement?: () => void;
   highlightTypesList: string[];
+  sitesList: string[];
 }
 
 const TYPE_COLORS = ['#2e7d32','#1565c0','#6a1b9a','#e65100','#00838f','#ad1457','#c62828','#37474f'];
 
 const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
-  announcements, isOpen, onDismiss, onSelectTabbedAnnouncement, onAddTabbedAnnouncement, highlightTypesList,
+  announcements, isOpen, onDismiss, onSelectTabbedAnnouncement, onAddTabbedAnnouncement, highlightTypesList, sitesList,
 }): JSX.Element => {
   const getTypeColor = (type: string): string => {
     const idx = highlightTypesList.findIndex(t => t.toLowerCase() === type?.trim().toLowerCase());
@@ -27,6 +28,13 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [showDateFilter, setShowDateFilter] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('All');
+
+  const tabs = ['All', ...sitesList];
+
+  useEffect(() => {
+    if (!tabs.includes(activeTab)) setActiveTab('All');
+  }, [sitesList]);
 
   if (!isOpen) return <></>;
 
@@ -44,7 +52,12 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
       else if (dateTo) matchesDateRange = createdDate <= dateTo;
     }
 
-    return matchesSearch && matchesDateRange;
+    const matchesTab =
+      activeTab === 'All' ||
+      announcement.Site?.trim() === 'All' ||
+      announcement.Site?.trim() === activeTab;
+
+    return matchesSearch && matchesDateRange && matchesTab;
   });
 
   const publishedAnnouncements = filteredAnnouncements.filter(a => a.Status?.trim() === 'Published');
@@ -128,6 +141,20 @@ const ViewAllPanel: React.FC<ViewAllPanelProps> = ({
               </button>
             </div>
           </div>
+
+          {tabs.length > 1 && (
+            <div className={styles.tabsRow}>
+              {tabs.map(tab => (
+                <button
+                  key={tab}
+                  className={`${styles.tab}${activeTab === tab ? ' ' + styles.tabActive : ''}`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className={styles.filterBar}>
             <SearchBox
